@@ -1,0 +1,115 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask
+instance/
+.webassets-cache
+*.db
+*.sqlite
+*.sqlite3
+
+# Database
+accident_dashboard.db
+*.db-journal
+
+# Media files (uploaded content)
+backend/media/snapshots/*
+backend/media/videos/*
+# Keep the directories but ignore contents
+!backend/media/snapshots/.gitkeep
+!backend/media/videos/.gitkeep
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node.js / React
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# React build
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# OS
+Thumbs.db
+.DS_Store
+*.tmp
+
+# Temporary files
+*.bak
+*.swp
+*.tmp
+*~
+
+# Session cookies (for testing)
+cookies.txt
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Distribution / packaging
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
