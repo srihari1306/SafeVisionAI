@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Server Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+
+    <div class="bg-gray-800 p-8 rounded-lg shadow-2xl max-w-2xl w-full">
+        <h1 class="text-2xl font-bold mb-4">Accident App - Server Test Client</h1>
+        <p class="text-gray-400 mb-6">
+            Test all your server's API endpoints from here. Your server must be running.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Column 1: Feedback and Retrain -->
+            <div>
+                <h2 class="text-lg font-semibold text-indigo-400 mb-3">Phase 2: Feedback & Retraining</h2>
+                
+                <!-- Test Feedback Button -->
+                <button id="testFeedbackButton" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mb-4">
+                    1. Send Test Feedback
+                </button>
+                
+                <!-- Test Retrain Button -->
+                <button id="testRetrainButton" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                    2. Trigger Retraining Job
+                </button>
+            </div>
+
+            <!-- Column 2: Model Version and Download -->
+            <div>
+                <h2 class="text-lg font-semibold text-teal-400 mb-3">Phase 1: App Functions</h2>
+                
+                <!-- Test Version Check Button -->
+                <button id="testVersionButton" class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mb-4">
+                    3. Check Model Version
+                </button>
+                
+                <!-- Model Download Area -->
+                <div>
+                    <input type="text" id="modelFilename" value="accident_model_v1.tflite" class="w-full bg-gray-700 text-white rounded-md p-2 text-sm" placeholder="Enter model filename...">
+                    <button id="testDownloadButton" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition duration-300 mt-2">
+                        4. Download Model File
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Server Response Area -->
+        <div class="mt-6">
+            <label class="block text-sm font-medium text-gray-300">Server Response:</label>
+            <pre id="responseArea" class="bg-gray-900 text-gray-300 rounded-md p-4 mt-2 h-48 overflow-auto text-sm"></pre>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        const responseArea = document.getElementById('responseArea');
+
+        // --- 1. Test Feedback ---
+        document.getElementById('testFeedbackButton').addEventListener('click', async () => {
+            
+            // --- *** UPDATED MOCK DATA (V3) *** ---
+            // We will now generate a full 150-sample window to pass
+            // the retraining pipeline's validation.
+            
+            let mockWindow = [];
+            for (let i = 0; i < 150; i++) {
+                // [acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, speed]
+                let row = [
+                    Math.random() * 2 - 1, // acc_x
+                    Math.random() * 2 - 1, // acc_y
+                    9.8 + Math.random() * 0.5 - 0.25, // acc_z (around gravity)
+                    Math.random() * 10 - 5, // gyr_x
+                    Math.random() * 10 - 5, // gyr_y
+                    Math.random() * 10 - 5, // gyr_z
+                    45.0 - (i / 150) * 5 // speed (decreasing slightly)
+                ];
+                mockWindow.push(row);
+            }
+            
+            // Add a "spike" in the middle
+            mockWindow[75][0] = 30.0; // High G-force spike
+            mockWindow[75][3] = 250.0; // High Gyro spike
+
+            const mockSensorData = {
+                "timestamp": new Date().toISOString(),
+                "phone_model": "TestClient-HTML (v3)",
+                "sensor_window": mockWindow // Send the full 150-sample window
+            };
+            // --- *** END OF UPDATE *** ---
+            
+            responseArea.textContent = "Sending feedback to /api/feedback (with 150 samples)...";
+            try {
+                const response = await fetch(`${API_BASE}/api/feedback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(mockSensorData)
+                });
+                const result = await response.json();
+                responseArea.textContent = "Success!\n\n" + JSON.stringify(result, null, 2);
+            } catch (error) {
+                responseArea.textContent = "Error:\n\n" + error.message;
+            }
+        });
+
+        // --- 2. Test Retrain ---
+        document.getElementById('testRetrainButton').addEventListener('click', async () => {
+            responseArea.textContent = "Sending POST request to /api/retrain...";
+            try {
+                const response = await fetch(`${API_BASE}/api/retrain`, { method: 'POST' });
+                const result = await response.json();
+                responseArea.textContent = "Success! Retraining job started.\n(Check your Python terminal)\n\n" + JSON.stringify(result, null, 2);
+            } catch (error) {
+                responseArea.textContent = "Error:\n\n" + error.message;
+            }
+        });
+
+        // --- 3. Test Version Check ---
+        document.getElementById('testVersionButton').addEventListener('click', async () => {
+            responseArea.textContent = "Sending GET request to /api/model/version...";
+            try {
+                const response = await fetch(`${API_BASE}/api/model/version`, { method: 'GET' });
+                const result = await response.json();
+                responseArea.textContent = "Success!\n\n" + JSON.stringify(result, null, 2);
+                // Auto-fill the filename input with the latest version
+                document.getElementById('modelFilename').value = result.filename;
+            } catch (error) {
+                responseArea.textContent = "Error:\n\n" + error.message;
+            }
+        });
+
+        // --- 4. Test Download ---
+        document.getElementById('testDownloadButton').addEventListener('click', async () => {
+            const filename = document.getElementById('modelFilename').value;
+            if (!filename) {
+                responseArea.textContent = "Error: Please enter a filename to download.";
+                return;
+            }
+            
+            responseArea.textContent = `Sending GET request to /api/model/download/${filename}...`;
+            try {
+                const response = await fetch(`${API_BASE}/api/model/download/${filename}`, { method: 'GET' });
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                // This will trigger a file download in your browser
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                responseArea.textContent = `Success! File download for "${filename}" initiated.`;
+
+            } catch (error) {
+                responseArea.textContent = "Error:\n\n" + error.message;
+            }
+        });
+
+    </script>
+
+</body>
+</html>
